@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+</head>
+<body>
+    <h1>Create a New Account</h1>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        
+        <!-- Display form fields from the ProfileForm -->
+        {{ form.as_p }} <!-- This will render the form fields as paragraphs -->
+
+        <button type="submit">Register</button>
+    </form>
+
+    <!-- Display messages if any -->
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

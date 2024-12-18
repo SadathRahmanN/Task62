@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Personal Profile Manager</title>
+    <style>
+        /* Reset default margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    
+        body {
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            background: url('/static/images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+    
+        /* General Section Styling */
+        section {
+            height: 100vh; /* Full viewport height for each section */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding-top: 60px; /* Offset for fixed navbar */
+        }
+    
+        /* Header/Navbar Styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: rgba(44, 62, 80, 0.9); /* Slightly transparent */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+    
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff7f50;
+            text-transform: uppercase;
+        }
+    
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+    
+        nav ul li {
+            display: inline;
+        }
+    
+        nav ul li a {
+            text-decoration: none;
+            color: #ffffff;
+            font-size: 16px;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+    
+        nav ul li a:hover {
+            color: #ff7f50;
+            background-color: rgba(255, 127, 80, 0.2);
+            border-radius: 5px;
+        }
+
+        /* Navbar Auth Buttons */
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-buttons a {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn {
+            color: #ffffff;
+            background-color: transparent;
+            border: 1px solid #ffffff;
+        }
+
+        .login-btn:hover {
+            background-color: #ffffff;
+            color: #2c3e50;
+        }
+
+        .signup-btn {
+            color: #ffffff;
+            background-color: #ff7f50;
+        }
+
+        .signup-btn:hover {
+            background-color: #e76e3e;
+            color: #ffffff;
+        }
+
+        /* Gradient Overlays for Each Section */
+        .hero {
+            background: linear-gradient(to bottom, rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.5)), 
+                        url('/static/images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    
+        .features {
+            background: linear-gradient(to bottom, rgba(231, 76, 60, 0.7), rgba(231, 76, 60, 0.3)), 
+                        url('/static/images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    
+        .how-it-works {
+            background: linear-gradient(to bottom, rgba(52, 152, 219, 0.7), rgba(52, 152, 219, 0.3)), 
+                        url('/static/images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    
+        .contact {
+            background: linear-gradient(to bottom, rgba(155, 89, 182, 0.7), rgba(155, 89, 182, 0.3)), 
+                        url('/static/images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    
+        /* Text and Content Styling */
+        h1, h2 {
+            font-size: 3rem;
+            margin: 0.5rem 0;
+        }
+    
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+    
+        .cta-buttons a, button {
+            text-decoration: none;
+            padding: 12px 24px;
+            color: #fff;
+            background-color: #ff7f50;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+    
+        button:hover, .cta-buttons a:hover {
+            background-color: #e76e3e;
+        }
+    
+        /* Contact Form */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 80%;
+            max-width: 400px;
+        }
+    
+        input, textarea {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+    
+        footer {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+    
+        footer a {
+            color: #ff7f50;
+            text-decoration: none;
+        }
+    
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Sign Up Form Styling */
+        #signup-form, #login-form {
+            position: fixed;
+            top: 0;
+            right: -100%; /* Initially hidden off the screen to the right */
+            width: 40%;
+            height: 100%;
+            background: rgba(44, 62, 80, 0.8);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: right 0.5s ease-in-out;
+            z-index: 2000;
+        }
+
+        #signup-form input, #signup-form textarea, #login-form input {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        /* Close Button Styling */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #ffffff;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Switch Links */
+        .switch-link {
+            color: #ffffff;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+
+        .switch-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Admin Button Styling */
+.admin-btn {
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    color: #ffffff;
+    background-color: transparent;
+    border: 1px solid #ffffff;
+}
+
+.admin-btn:hover {
+    background-color: #ffffff;
+    color: #2c3e50;
+}
+
+/* Admin Form Styling */
+#admin-form {
+    position: fixed;
+    top: 0;
+    right: -100%; /* Initially hidden off the screen to the right */
+    width: 40%;
+    height: 100%;
+    background: rgba(44, 62, 80, 0.8);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: right 0.5s ease-in-out;
+    z-index: 2000;
+}
+
+/* Close Button Styling */
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    color: #ffffff;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+#admin-form input, #admin-form textarea {
+    width: 100%;
+    max-width: 350px;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+#admin-form button {
+    background-color: #ff7f50;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+#admin-form button:hover {
+    background-color: #e76e3e;
+}
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Portfolio</div>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">How It Works</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="#" class="login-btn" onclick="showLoginForm()">Login</a>
+            <a href="#" class="signup-btn" onclick="showSignUpForm()">Sign Up</a>
+            <a href="#" class="admin-btn" onclick="showAdminForm()">Admin</a> <!-- Admin Button -->
+        </div>
+    </header>
+     
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <h1>Welcome to Portfolio – Your Personal Profile Manager!</h1>
+        <p>Organize your profile, manage your account, and stay in control.</p>
+        <div class="cta-buttons">
+            <a href="#" onclick="showSignUpForm()">Sign Up for Free</a>
+            <a href="#features">Learn More</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2>Features</h2>
+        <p>Explore what makes us the best for profile management.</p>
+        <div>
+            <p>Easy Profile Management</p>
+            <p>Secure Access</p>
+            <p>Customizable Settings</p>
+            <p>Accessible Anywhere</p>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="about" class="how-it-works">
+        <h2>How It Works</h2>
+        <p>Sign up, manage your profile, and stay connected.</p>
+        <div>
+            <p>1. Sign Up</p>
+            <p>2. Manage Profile</p>
+            <p>3. Stay Connected</p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <h2>Contact Us</h2>
+        <p>We'd love to hear from you! Send us a message below:</p>
+        <form action="{% url 'contact' %}" method="POST">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email" required>
+            <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Portfolio App. All rights reserved.</p>
+        <p>
+            <a href="#">Terms of Service</a> |
+            <a href="#">Privacy Policy</a> |
+            <a href="#">About Us</a>
+        </p>
+    </footer>
+
+    <!-- Sign Up Form -->
+    <div id="signup-form">
+        <button class="close-btn" onclick="closeSignUpForm()">×</button>
+        <h2>Sign Up</h2>
+        <form action="{% url 'create_user' %}" method="POST">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <textarea name="bio" placeholder="Tell us about yourself"></textarea>
+            <button type="submit">Create Account</button>
+        </form>
+        <a href="#" class="switch-link" onclick="switchToLoginForm()">Already have an account? Login</a>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form">
+        <button class="close-btn" onclick="closeLoginForm()">×</button>
+        <h2>Login</h2>
+        <form action="{% url 'login' %}" method="POST">
+            {% csrf_token %}
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <a href="#" class="switch-link" onclick="switchToSignUpForm()">Don't have an account? Sign Up</a>
+    </div>
+
+<!-- Admin Form -->
+<div id="admin-form">
+    <button class="close-btn" onclick="closeAdminForm()">×</button>
+    <h2>Admin Login</h2>
+    <!-- Admin Login Form -->
+    <form action="{% url 'admin_login' %}" method="POST">
+        {% csrf_token %}
+        <input type="email" name="email" placeholder="Admin Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login as Admin</button>
+    </form>
+</div>
+
+
+
+    <script>
+        function showSignUpForm() {
+            document.getElementById('signup-form').style.right = '0';
+        }
+
+        function closeSignUpForm() {
+            document.getElementById('signup-form').style.right = '-100%';
+        }
+
+        function showLoginForm() {
+            document.getElementById('login-form').style.right = '0';
+        }
+
+        function closeLoginForm() {
+            document.getElementById('login-form').style.right = '-100%';
+        }
+
+        function switchToLoginForm() {
+            closeSignUpForm();
+            setTimeout(function() {
+                showLoginForm();
+            }, 500);
+        }
+
+        function switchToSignUpForm() {
+            closeLoginForm();
+            setTimeout(function() {
+                showSignUpForm();
+            }, 500);
+        }
+
+     // Show the Admin Form
+function showAdminForm() {
+    document.getElementById('admin-form').style.right = '0';
+}
+
+// Close the Admin Form
+function closeAdminForm() {
+    document.getElementById('admin-form').style.right = '-100%';
+}
+
+        
+    </script>
+</body>
+</html>

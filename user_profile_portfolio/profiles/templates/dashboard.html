@@ -1,0 +1,30 @@
+<!-- dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+<h1>Welcome to Your Dashboard, {{ user.username }}!</h1>
+
+<!-- Display user's profile information -->
+<p><strong>Email:</strong> {{ user.email }}</p>
+<p><strong>Username:</strong> {{ user.username }}</p>
+
+<!-- Optionally, display any other user-specific content here -->
+<div>
+    <h2>Your Projects:</h2>
+    <ul>
+        {% for project in user.projects.all %}
+        <li>
+            <strong>{{ project.name }}</strong> - {{ project.description }}
+            <a href="{{ project.link }}" target="_blank">View Project</a>
+        </li>
+        {% empty %}
+        <li>No projects to display.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Optionally, provide a logout link -->
+<a href="{% url 'logout' %}">Logout</a>
+{% endblock %}
