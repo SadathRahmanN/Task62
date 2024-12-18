@@ -77,7 +77,7 @@ def login_user(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, "Login successful!")
-                return redirect('home')
+                return redirect('dashboard')
             else:
                 messages.error(request, "Invalid email or password.")
         except User.DoesNotExist:
@@ -134,3 +134,9 @@ def signup_view(request):
 @login_required
 def dashboard(request):
     return render(request, 'dashboard.html') 
+
+from django.contrib.auth import logout
+
+def logout_user(request):
+    logout(request)
+    return redirect('home')  # Redirect to login page after logout
