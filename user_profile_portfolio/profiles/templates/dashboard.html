@@ -1,30 +1,381 @@
-<!-- dashboard.html -->
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #f4f7fc, #d9e4f5);
+            color: #333;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #546de5;
+            color: white;
+            padding: 10px 20px;
+        }
+        .navbar .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .navbar .links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .navbar .links a:hover {
+            text-decoration: underline;
+        }
+        .dashboard-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .profile-section {
+            width: 25%;
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .profile-section img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            object-fit: cover;
+            background: linear-gradient(to bottom, #e3e8f1, #d2dbe5);
+            cursor: pointer;
+        }
+        .profile-section input[type="file"] {
+            display: none;
+        }
+        .profile-section button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background: #546de5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .main-dashboard {
+            width: 65%;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .main-dashboard h2 {
+            text-align: center;
+        }
+        .card-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .card {
+            width: 30%;
+            background: #f7f9fc;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            text-align: center;
+        }
+        .card img {
+            width: 80px;
+            margin-bottom: 15px;
+        }
+        .add-project-card {
+            width: 30%;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #d9e4f5;
+            border: 2px dashed #546de5;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            width: 400px;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .upload-box {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #d9e4f5;
+            border: 2px dashed #546de5;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .upload-box input[type="file"] {
+            display: none;
+        }
+        .upload-box span {
+            font-size: 2rem;
+            color: #546de5;
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-container input,
+        .form-container textarea {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">Dashboard</div>
+        <div class="links">
+            <a href="{% url 'showcase' %}">Showcase</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
 
-{% block title %}User Dashboard{% endblock %}
+    <div class="dashboard-container">
+        <div class="profile-section">
+            <label for="profilePhoto">
+                <img src="{{ user.profile_photo|default:'https://via.placeholder.com/100' }}" alt="User" id="userPhoto">
+            </label>
+            <input type="file" id="profilePhoto" accept="image/*" onchange="uploadPhoto()" style="display: none;">
+            <h3 id="usernameDisplay">{{ user.username }}</h3>
+            <p id="emailDisplay">{{ user.email }}</p>
+            <p id="bioDisplay">{{ user.bio|default:"No Bio" }}</p>
+            <p id="skillsDisplay">{{ user.skills|default:"No Skills" }}</p>
+            <button onclick="enableEditMode()">Edit Profile</button>
+        </div>
 
-{% block content %}
-<h1>Welcome to Your Dashboard, {{ user.username }}!</h1>
+        <div class="main-dashboard">
+            <h2>Your Projects</h2>
+            <div class="card-container">
+                {% for project in projects %}
+                <div class="card">
+                    <img src="{{ project.image_url|default:'https://via.placeholder.com/80' }}" alt="Project">
+                    <h4>{{ project.name }}</h4>
+                    <button onclick="editProject('{{ project.id }}')">Edit Project</button>
+                </div>
+                {% empty %}
+                <p>No projects to display.</p>
+                {% endfor %}
+                <div class="add-project-card" onclick="showUploadModal()">
+                    <span>+</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Display user's profile information -->
-<p><strong>Email:</strong> {{ user.email }}</p>
-<p><strong>Username:</strong> {{ user.username }}</p>
+    <!-- Modal for Uploading Project -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <h3>Upload Project</h3>
+            <form id="projectUploadForm" onsubmit="uploadProject(event)">
+                {% csrf_token %}
+                <div class="upload-box" onclick="document.getElementById('projectImages').click()">
+                    <input type="file" id="projectImages" accept="image/*" multiple onchange="previewImages()" />
+                    <span>+</span>
+                </div>
+                <div class="form-container">
+                    <input type="text" name="name" placeholder="Project Name" required>
+                    <textarea name="description" placeholder="Description (Optional)"></textarea>
+                    <input type="url" name="image_url" placeholder="Image URL (Optional)">
+                </div>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+    </div>
 
-<!-- Optionally, display any other user-specific content here -->
-<div>
-    <h2>Your Projects:</h2>
-    <ul>
-        {% for project in user.projects.all %}
-        <li>
-            <strong>{{ project.name }}</strong> - {{ project.description }}
-            <a href="{{ project.link }}" target="_blank">View Project</a>
-        </li>
-        {% empty %}
-        <li>No projects to display.</li>
-        {% endfor %}
-    </ul>
-</div>
+    <!-- Modal for Editing Project -->
+    <div class="modal" id="editProjectModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeEditModal()">×</button>
+            <h3>Edit Project</h3>
+            <form id="editProjectForm" onsubmit="saveProjectChanges(event)">
+                {% csrf_token %}
+                <div class="form-container">
+                    <input type="text" name="name" id="editProjectName" placeholder="Project Name" required>
+                    <textarea name="description" id="editProjectDescription" placeholder="Description (Optional)"></textarea>
+                    <input type="url" name="image_url" id="editProjectImageUrl" placeholder="Image URL (Optional)">
+                </div>
+                <div class="upload-box" onclick="document.getElementById('editProjectImages').click()">
+                    <input type="file" id="editProjectImages" accept="image/*" multiple onchange="previewEditImages()" />
+                    <span>+</span>
+                </div>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
 
-<!-- Optionally, provide a logout link -->
-<a href="{% url 'logout' %}">Logout</a>
-{% endblock %}
+    <script>
+        function enableEditMode() {
+            document.getElementById('usernameDisplay').innerHTML = `<input type="text" id="usernameInput" value="${document.getElementById('usernameDisplay').innerText}">`;
+            document.getElementById('bioDisplay').innerHTML = `<textarea id="bioInput">${document.getElementById('bioDisplay').innerText}</textarea>`;
+            document.getElementById('skillsDisplay').innerHTML = `<input type="text" id="skillsInput" value="${document.getElementById('skillsDisplay').innerText}">`;
+            document.querySelector('button').textContent = 'Save Changes';
+            document.querySelector('button').setAttribute('onclick', 'saveProfile()');
+        }
+
+        function saveProfile() {
+            const data = new FormData();
+            data.append('username', document.getElementById('usernameInput').value);
+            data.append('bio', document.getElementById('bioInput').value);
+            data.append('skills', document.getElementById('skillsInput').value);
+
+            fetch('/update_profile/', {
+                method: 'POST',
+                body: data,
+                headers: { 'X-CSRFToken': getCSRFToken() },
+            }).then(res => res.json())
+              .then(data => {
+                  document.getElementById('usernameDisplay').innerText = data.username;
+                  document.getElementById('bioDisplay').innerText = data.bio;
+                  document.getElementById('skillsDisplay').innerText = data.skills;
+                  document.querySelector('button').textContent = 'Edit Profile';
+                  document.querySelector('button').setAttribute('onclick', 'enableEditMode()');
+              });
+        }
+
+        function uploadPhoto() {
+            const fileInput = document.getElementById('profilePhoto');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            fetch('/update_profile/', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': getCSRFToken() },
+            }).then(res => res.json())
+              .then(data => {
+                  document.getElementById('userPhoto').src = data.profile_photo;
+                  alert('Profile updated successfully!');
+              });
+        }
+
+        function editProject(projectId) {
+            document.getElementById('editProjectModal').classList.add('active');
+            // Fetch project data and populate fields for editing
+            fetch(`/projects/${projectId}/edit/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('editProjectName').value = data.name;
+                    document.getElementById('editProjectDescription').value = data.description;
+                    document.getElementById('editProjectImageUrl').value = data.image_url;
+                    document.getElementById('editProjectForm').onsubmit = function (e) {
+                        saveProjectChanges(e, projectId);
+                    };
+                });
+        }
+
+        function saveProjectChanges(event, projectId) {
+            event.preventDefault();
+
+            const data = new FormData(event.target);
+
+            fetch(`/projects/${projectId}/edit/`, {
+                method: 'POST',
+                body: data,
+                headers: { 'X-CSRFToken': getCSRFToken() },
+            }).then(response => response.json())
+              .then(data => {
+                  alert('Project updated successfully!');
+                  closeEditModal();
+              });
+        }
+
+        function closeEditModal() {
+            document.getElementById('editProjectModal').classList.remove('active');
+        }
+
+        function getCSRFToken() {
+            return document.querySelector('[name=csrf-token]').content;
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function previewImages() {
+            const fileInput = document.getElementById('projectImages');
+            const files = fileInput.files;
+            const preview = document.querySelector('.upload-box');
+            preview.innerHTML = '';  // Clear the current preview
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+        function previewEditImages() {
+            const fileInput = document.getElementById('editProjectImages');
+            const files = fileInput.files;
+            const preview = document.querySelector('.upload-box');
+            preview.innerHTML = '';  // Clear the current preview
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+    </script>
+</body>
+</html>

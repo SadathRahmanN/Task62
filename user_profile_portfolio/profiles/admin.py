@@ -1,18 +1,21 @@
 from django.contrib import admin
 from .models import User, Project
 
-# Customize the User admin
+class ProjectInline(admin.TabularInline):
+    model = Project
+    extra = 1  # Add one extra form to add projects directly within the User admin
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'bio', 'skills', 'contact')  # Fields to display in the admin list
-    search_fields = ('username', 'email', 'skills')  # Fields for the search bar
-    list_filter = ('is_active', 'is_staff', 'is_superuser')  # Add filters for the user status
+    list_display = ('username', 'email', 'bio', 'skills', 'contact')
+    search_fields = ('username', 'email', 'skills', 'bio')
+    list_filter = ('is_active', 'is_staff', 'is_superuser')
     fieldsets = (
         (None, {
-            'fields': ('username', 'email', 'password')  # Basic fields
+            'fields': ('username', 'email', 'password')
         }),
         ('Personal Info', {
-            'fields': ('bio', 'skills', 'contact')  # Custom fields added to the user model
+            'fields': ('bio', 'skills', 'contact')
         }),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
@@ -21,22 +24,22 @@ class UserAdmin(admin.ModelAdmin):
             'fields': ('last_login', 'date_joined')
         }),
     )
-    ordering = ('username',)  # Default ordering by username
+    inlines = [ProjectInline]
+    ordering = ('username',)
 
-
-# Customize the Project admin
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'created_at', 'updated_at')  # Fields to display in the admin list
-    search_fields = ('name', 'user__username', 'description')  # Fields for the search bar
-    list_filter = ('created_at', 'updated_at')  # Filters for creation and update timestamps
-    readonly_fields = ('created_at', 'updated_at')  # Make timestamps read-only
+    list_display = ('name', 'user', 'created_at', 'updated_at')
+    search_fields = ('name', 'user__username', 'description')
+    list_filter = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'user')  # Make user field read-only
     fieldsets = (
         (None, {
-            'fields': ('user', 'name', 'description')  # Essential fields
+            'fields': ('user', 'name', 'description')
         }),
         ('Additional Info', {
-            'fields': ('image_url', 'link', 'created_at', 'updated_at')  # Optional fields
+            'fields': ('image_url', 'link', 'created_at', 'updated_at')
         }),
     )
-    ordering = ('-created_at',)  # Default ordering by the newest projects
+    date_hierarchy = 'created_at'  # Adds date navigation
+    ordering = ('-created_at',)

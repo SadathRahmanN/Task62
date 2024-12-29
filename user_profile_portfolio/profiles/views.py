@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from .models import User, Project
-from django.contrib import messages  # For flashing messages
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
-
+from .models import User, Project
+from django.db import IntegrityError
+from django.apps import AppConfig
 
 # Home View: Display all users and projects
 def home(request):
@@ -12,69 +13,72 @@ def home(request):
     projects = Project.objects.all()
     return render(request, 'home.html', {'users': users, 'projects': projects})
 
-# Create User View: Handle user registration
-def create_user(request):
+# User Registration View
+def signup_user(request):
     if request.method == 'POST':
-        # Validate form data
-        username = request.POST['username']
-        bio = request.POST['bio']
-        skills = request.POST['skills']
-        contact = request.POST['contact']
-
-        if username and bio and skills and contact:
-            User.objects.create(
-                username=username,
-                bio=bio,
-                skills=skills,
-                contact=contact
-            )
-            messages.success(request, "User created successfully!")
-            return redirect('home')
-        else:
-            messages.error(request, "All fields are required!")
-    return render(request, 'create_user.html')
-
-# Showcase Projects View: Handle project showcase submission
-def showcase_projects(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        try:
-            user = User.objects.get(username=username)
-            project_name = request.POST['project_name']
-            description = request.POST['description']
-            image_url = request.POST['image_url']
-            link = request.POST['link']
-            
-            # Validate project data
-            if project_name and description:
-                Project.objects.create(
-                    user=user,
-                    name=project_name,
-                    description=description,
-                    image_url=image_url,
-                    link=link
-                )
-                messages.success(request, "Project showcased successfully!")
-                return redirect('home')
-            else:
-                messages.error(request, "Project name and description are required!")
-        except User.DoesNotExist:
-            messages.error(request, "User does not exist!")
-    
-    return render(request, 'showcase_projects.html')
-
-# Login User View: Handle user authentication
-def login_user(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')  # Access 'email' instead of 'username'
+        username = request.POST.get('username')
+        email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # Authenticate the user using the email
+        if all([username, email, password]):
+            try:
+                # Check if a user already exists with the same username or email
+                if User.objects.filter(username=username).exists():
+                    messages.error(request, "User with this username already exists.")
+                elif User.objects.filter(email=email).exists():
+                    messages.error(request, "A user with this email already exists.")
+                else:
+                    user = User.objects.create(
+                        username=username,
+                        email=email,
+                    )
+                    user.set_password(password)  # Hash the password
+                    user.save()
+                    messages.success(request, "User created successfully!")
+                    # Login the user automatically after creating the account
+                    login(request, user)
+                    return redirect('dashboard')  # Redirect to dashboard after login
+            except IntegrityError:
+                messages.error(request, "Error creating user, please try again.")
+        else:
+            messages.error(request, "All fields are required!")
+    return render(request, 'home.html')
+
+# Showcase Projects View
+def showcase_projects(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        project_name = request.POST.get('project_name')
+        description = request.POST.get('description')
+        image_url = request.POST.get('image_url')
+        link = request.POST.get('link')
+
+        user = get_object_or_404(User, username=username)
+        if project_name and description:
+            Project.objects.create(
+                user=user,
+                name=project_name,
+                description=description,
+                image_url=image_url,
+                link=link
+            )
+            messages.success(request, "Project showcased successfully!")
+            return redirect('home')
+        else:
+            messages.error(request, "Project name and description are required!")
+    return render(request, 'showcase_projects.html')
+
+# Login View
+def login_user(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
         try:
-            user = User.objects.get(email=email)  # Retrieve the user by email
+            user = User.objects.get(email=email)
             user = authenticate(request, username=user.username, password=password)
 
-            if user is not None:
+            if user:
                 login(request, user)
                 messages.success(request, "Login successful!")
                 return redirect('dashboard')
@@ -82,61 +86,114 @@ def login_user(request):
                 messages.error(request, "Invalid email or password.")
         except User.DoesNotExist:
             messages.error(request, "User with this email does not exist.")
-    
     return render(request, 'login.html')
 
-
-# Admin Login View: Handle admin authentication
+# Admin Login View
 def admin_login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
         try:
-            # Attempt to retrieve the user by email (assuming you are storing email in the username field)
             user = User.objects.get(email=email)
-            
-            # Authenticate the user with the username and password
             user = authenticate(request, username=user.username, password=password)
 
-            if user is not None and user.is_superuser:
+            if user and user.is_superuser:
                 login(request, user)
-                return redirect('admin_dashboard')  # Redirect to the admin dashboard
+                return redirect('admin_dashboard')
             else:
-                messages.error(request, 'Invalid credentials or not an admin.')
+                messages.error(request, "Invalid credentials or not an admin.")
         except User.DoesNotExist:
-            messages.error(request, 'User with this email does not exist.')
-
+            messages.error(request, "User with this email does not exist.")
     return render(request, 'admin_login.html')
 
-# Admin Dashboard View: Show the admin dashboard after login
+# Admin Dashboard View
+@login_required
 def admin_dashboard(request):
-    if request.user.is_authenticated and request.user.is_superuser:
+    if request.user.is_superuser:
         return render(request, 'admin_dashboard.html')
-    else:
-        return redirect('admin_login')  # Redirect to admin login if not logged in as admin
+    return redirect('admin_login')
 
-# Contact Form View: Handle contact form submission
+# Contact Form View
 def contact(request):
     if request.method == "POST":
         name = request.POST.get('name')
         email = request.POST.get('email')
         message = request.POST.get('message')
-        # You can process the data here, e.g., save to database or send an email
+        # Process form data (save, send email, etc.)
         print(f"Message from {name} ({email}): {message}")
         return HttpResponse("Thank you for contacting us!")
-    return render(request, 'contact.html')  # If you have a separate contact template
+    return render(request, 'contact.html')
 
-# Signup View: Render the signup page
-def signup_view(request):
-    return render(request, 'signup.html')
 
+# User Dashboard View
 @login_required
 def dashboard(request):
-    return render(request, 'dashboard.html') 
+    if request.method == "POST":
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        image_url = request.POST.get("image_url", "")
+        link = request.POST.get("link")
 
-from django.contrib.auth import logout
+        if all([name, description, link]):
+            Project.objects.create(
+                user=request.user,
+                name=name,
+                description=description,
+                image_url=image_url,
+                link=link
+            )
+            messages.success(request, "Project uploaded successfully!")
+        else:
+            messages.error(request, "Please fill in all required fields.")
+        return redirect("dashboard")
 
+    projects = Project.objects.filter(user=request.user)
+    return render(request, "dashboard.html", {"user": request.user, "projects": projects})
+
+# Logout View
 def logout_user(request):
     logout(request)
-    return redirect('home')  # Redirect to login page after logout
+    messages.success(request, "You have been logged out.")
+    return redirect('home')
+
+# Upload Project via AJAX
+@login_required
+def upload_project(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        image_url = request.POST.get("image_url", "")
+        link = request.POST.get("link")
+
+        if all([name, description, link]):
+            project = Project.objects.create(
+                user=request.user,
+                name=name,
+                description=description,
+                image_url=image_url,
+                link=link
+            )
+            return JsonResponse({
+                "message": "Project uploaded successfully!",
+                "project": {
+                    "name": project.name,
+                    "description": project.description,
+                    "image_url": project.image_url,
+                    "link": project.link,
+                }
+            }, status=201)
+        return JsonResponse({"error": "Missing required fields."}, status=400)
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+# Showcase View
+def showcase(request):
+    projects = Project.objects.all()
+    return render(request, 'showcase.html', {'projects': projects})
+
+
+class ProfilesConfig(AppConfig):
+    name = 'profiles'
+
+    def ready(self):
+        import profiles.signals  # Make sure to include any signals if needed

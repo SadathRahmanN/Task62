@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Home - Projects Feed</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fc;
+            color: #333;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #546de5;
+            color: white;
+            padding: 10px 20px;
+        }
+        .navbar .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .navbar .links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .navbar .links a:hover {
+            text-decoration: underline;
+        }
+        .project-feed {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .project-card {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .project-card img {
+            width: 100%;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .project-card h4 {
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+        .project-card p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">Project Feed</div>
+        <div class="links">
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="#">Projects</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="project-feed">
+        {% for project in projects %}
+        <div class="project-card">
+            <img src="{{ project.image_url|default:'https://via.placeholder.com/250' }}" alt="{{ project.name }}">
+            <h4>{{ project.name }}</h4>
+            <p>{{ project.description|slice:":100" }}...</p>
+            <button onclick="viewProject('{{ project.id }}')">View</button>
+        </div>
+        {% empty %}
+        <p>No projects to display.</p>
+        {% endfor %}
+    </div>
+
+    <script>
+        function viewProject(projectId) {
+            window.location.href = '/projects/' + projectId;  // Redirect to project detail page
+        }
+    </script>
+</body>
+</html>
