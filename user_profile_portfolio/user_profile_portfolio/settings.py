@@ -132,11 +132,10 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ALLOWED_HOSTS = [
+    'task62.onrender.com',
     '8000-idx-task62-1736147801263.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev',
     'localhost',
     '127.0.0.1',
-    'https://task62.onrender.com',
-    'www.yourdomain.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
