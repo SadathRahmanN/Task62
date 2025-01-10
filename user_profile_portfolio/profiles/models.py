@@ -38,10 +38,11 @@ class User(AbstractUser):
 # Project model
 class Project(models.Model):
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
+        User,  # Using the custom User model
+        on_delete=models.SET_NULL,  # Set the user to NULL if the user is deleted
         related_name='projects',  # This creates a reverse relationship from User to Project
-        verbose_name="User"
+        verbose_name="User",
+        null=True  # Allow user to be NULL when deleted
     )
     name = models.CharField(max_length=200, verbose_name="Project Name")
     description = models.TextField(verbose_name="Project Description")

@@ -130,4 +130,16 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CSRF_COOKIE_SECURE = True  # For production with HTTPS
+
+ALLOWED_HOSTS = [
+    '8000-idx-task62-1736147801263.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev',
+    'localhost',
+    '127.0.0.1',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://8000-idx-task62-1736147801263.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev',
+]
+
+# For development only
+CSRF_COOKIE_SECURE = False

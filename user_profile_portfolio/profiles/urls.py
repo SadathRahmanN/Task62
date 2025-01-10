@@ -15,6 +15,7 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),  # Logout URL
     path('upload_project/', views.upload_project, name='upload_project'),
     path('showcase/', views.showcase, name='showcase'),
+    path('check-db-connection/', views.check_db_connection, name='check_db_connection'),
 ]
 
 # Serve media files during development

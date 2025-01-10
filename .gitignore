@@ -1,0 +1,13 @@
+# Ignore virtual environment directory
+/venv/
+
+# Ignore database file
+user_profile_portfolio/db.sqlite3
+
+# Ignore Python bytecode files
+*.pyc
+user_profile_portfolio/profiles/__pycache__/
+user_profile_portfolio/user_profile_portfolio/__pycache__/
+
+# Ignore any other unwanted files
+.idx/

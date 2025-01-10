@@ -167,6 +167,15 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+        .success-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin-top: 15px;
+            text-align: center;
+            border-radius: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -189,13 +198,14 @@
             <p id="bioDisplay">{{ user.bio|default:"No Bio" }}</p>
             <p id="skillsDisplay">{{ user.skills|default:"No Skills" }}</p>
             <button onclick="enableEditMode()">Edit Profile</button>
+            <div class="success-message" id="profileSuccessMessage">Profile updated successfully!</div>
         </div>
 
         <div class="main-dashboard">
             <h2>Your Projects</h2>
-            <div class="card-container">
+            <div class="card-container" id="projectsContainer">
                 {% for project in projects %}
-                <div class="card">
+                <div class="card" id="project-{{ project.id }}">
                     <img src="{{ project.image_url|default:'https://via.placeholder.com/80' }}" alt="Project">
                     <h4>{{ project.name }}</h4>
                     <button onclick="editProject('{{ project.id }}')">Edit Project</button>
@@ -207,6 +217,7 @@
                     <span>+</span>
                 </div>
             </div>
+            <div class="success-message" id="projectSuccessMessage">Project uploaded successfully!</div>
         </div>
     </div>
 
@@ -227,27 +238,6 @@
                     <input type="url" name="image_url" placeholder="Image URL (Optional)">
                 </div>
                 <button type="submit">Upload</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Editing Project -->
-    <div class="modal" id="editProjectModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeEditModal()">×</button>
-            <h3>Edit Project</h3>
-            <form id="editProjectForm" onsubmit="saveProjectChanges(event)">
-                {% csrf_token %}
-                <div class="form-container">
-                    <input type="text" name="name" id="editProjectName" placeholder="Project Name" required>
-                    <textarea name="description" id="editProjectDescription" placeholder="Description (Optional)"></textarea>
-                    <input type="url" name="image_url" id="editProjectImageUrl" placeholder="Image URL (Optional)">
-                </div>
-                <div class="upload-box" onclick="document.getElementById('editProjectImages').click()">
-                    <input type="file" id="editProjectImages" accept="image/*" multiple onchange="previewEditImages()" />
-                    <span>+</span>
-                </div>
-                <button type="submit">Save Changes</button>
             </form>
         </div>
     </div>
@@ -278,6 +268,7 @@
                   document.getElementById('skillsDisplay').innerText = data.skills;
                   document.querySelector('button').textContent = 'Edit Profile';
                   document.querySelector('button').setAttribute('onclick', 'enableEditMode()');
+                  document.getElementById('profileSuccessMessage').style.display = 'block';
               });
         }
 
@@ -294,7 +285,7 @@
             }).then(res => res.json())
               .then(data => {
                   document.getElementById('userPhoto').src = data.profile_photo;
-                  alert('Profile updated successfully!');
+                  document.getElementById('profileSuccessMessage').style.display = 'block';
               });
         }
 
@@ -375,6 +366,36 @@
                 };
                 reader.readAsDataURL(files[i]);
             }
+        }
+
+        // Show success message when a project is uploaded
+        function uploadProject(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+
+            fetch('/projects/upload/', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': getCSRFToken() },
+            }).then(response => response.json())
+              .then(data => {
+                  document.getElementById('projectSuccessMessage').style.display = 'block';
+
+                  // Append the new project to the dashboard
+                  const projectContainer = document.getElementById('projectsContainer');
+                  const newProject = `
+                      <div class="card" id="project-${data.id}">
+                          <img src="${data.image_url}" alt="Project">
+                          <h4>${data.name}</h4>
+                          <button onclick="editProject('${data.id}')">Edit Project</button>
+                      </div>
+                  `;
+                  projectContainer.insertAdjacentHTML('beforeend', newProject);
+
+                  // Close the upload modal
+                  closeModal();
+              });
         }
     </script>
 </body>

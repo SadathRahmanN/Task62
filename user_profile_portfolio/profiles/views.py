@@ -6,6 +6,17 @@ from django.contrib.auth.decorators import login_required
 from .models import User, Project
 from django.db import IntegrityError
 from django.apps import AppConfig
+from .utils import get_db_connection  # Import the utility function
+
+def check_db_connection(request):
+    db_connection = get_db_connection()  # Get the database connection
+
+    if db_connection.connection:
+        connection_details = f"Database Connection: {db_connection.connection}"
+    else:
+        connection_details = "No database connection established."
+
+    return HttpResponse(connection_details)
 
 # Home View: Display all users and projects
 def home(request):
@@ -86,7 +97,7 @@ def login_user(request):
                 messages.error(request, "Invalid email or password.")
         except User.DoesNotExist:
             messages.error(request, "User with this email does not exist.")
-    return render(request, 'login.html')
+    return render(request, 'dashboard.html')
 
 # Admin Login View
 def admin_login(request):
