@@ -97,7 +97,7 @@ def login_user(request):
                 messages.error(request, "Invalid email or password.")
         except User.DoesNotExist:
             messages.error(request, "User with this email does not exist.")
-    return render(request, 'dashboard.html')
+    return render(request, 'home.html')
 
 # Admin Login View
 def admin_login(request):
