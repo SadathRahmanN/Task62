@@ -113,6 +113,7 @@
             background-color: #e76e3e;
             color: #ffffff;
         }
+        
 
         /* Gradient Overlays for Each Section */
         .hero {
@@ -242,6 +243,38 @@
             text-decoration: underline;
         }
 
+/*CSS for Message Styling */
+    .messages {
+        margin-top: 15px;
+        padding: 0;
+        list-style: none;
+    }
+
+    .messages li {
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        color: #fff;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .messages .success {
+        background-color: #27ae60; /* Green */
+    }
+
+    .messages .info {
+        background-color: #3498db; /* Blue */
+    }
+
+    .messages .warning {
+        background-color: #f39c12; /* Orange */
+    }
+
+    .messages .error {
+        background-color: #e74c3c; /* Red */
+    }
+
     </style>
 </head>
 <body>
@@ -261,6 +294,15 @@
         </div>
     </header>
      
+     <!-- Messages Section -->
+     {% if messages %}
+     <ul class="messages">
+         {% for message in messages %}
+             <li class="{{ message.tags }}">{{ message }}</li>
+         {% endfor %}
+     </ul>
+ {% endif %}
+
     <!-- Hero Section -->
     <section id="home" class="hero">
         <h1>Welcome to Portfolio – Your Personal Profile Manager!</h1>
@@ -316,82 +358,101 @@
         </p>
     </footer>
 
-    <!-- Sign Up Form -->
-    <div id="signup-form">
-        <button class="close-btn" onclick="closeSignUpForm()">×</button>
-        <h2>Create a New Account</h2>
+   <!-- Sign Up Form -->
+<div id="signup-form">
+    <button class="close-btn" onclick="closeSignUpForm()">×</button>
+    <h2>Create a New Account</h2>
 
-        <!-- Sign Up Form -->
-        <form method="POST" action="{% url 'signup' %}">
-            {% csrf_token %}
-            
-            <!-- Form fields -->
-            <label for="username">Username:</label>
-            <input type="text" name="username" required>
+    <form method="POST" action="{% url 'signup' %}">
+        {% csrf_token %}
+        
+        <!-- Form fields -->
+        <label for="username">Username:</label>
+        <input type="text" name="username" placeholder="Enter your username" required>
 
-            <label for="email">Email:</label>
-            <input type="email" name="email" required>
+        <label for="email">Email:</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
 
-            <label for="password">Password:</label>
-            <input type="password" name="password" required>
+        <label for="password">Password:</label>
+        <input type="password" name="password" placeholder="Enter your password" required>
 
-            <label for="confirm_password">Confirm Password:</label>
-            <input type="password" name="confirm_password" required>
-
-            <button type="submit">Create Account</button>
-        </form>
+        <label for="confirm_password">Confirm Password:</label>
+        <input type="password" name="confirm_password" placeholder="Re-enter your password" required>
 
         <!-- Display messages if any -->
         {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
 
-        <a href="#" class="switch-link" onclick="switchToLoginForm()">Already have an account? Login</a>
-    </div>
+        <button type="submit">Create Account</button>
+    </form>
 
-    <!-- Login Form -->
-    <div id="login-form">
-        <button class="close-btn" onclick="closeLoginForm()">×</button>
-        <h2>Login</h2>
-        <form action="{% url 'login' %}" method="POST">
-            {% csrf_token %}
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <a href="#" class="switch-link" onclick="switchToSignUpForm()">Don't have an account? Sign Up</a>
-    </div>
+    <a href="#" class="switch-link" onclick="switchToLoginForm()">Already have an account? Login</a>
+</div>
 
-    <script>
-        function showSignUpForm() {
-            document.getElementById('signup-form').style.right = '0';
-        }
+<!-- Login Form -->
+<div id="login-form">
+    <button class="close-btn" onclick="closeLoginForm()">×</button>
+    <h2>Login</h2>
+    <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
 
-        function closeSignUpForm() {
-            document.getElementById('signup-form').style.right = '-100%';
-        }
+        <label for="email">Email:</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
 
-        function switchToLoginForm() {
-            closeSignUpForm();
-            showLoginForm();
-        }
+        <label for="password">Password:</label>
+        <input type="password" name="password" placeholder="Enter your password" required>
 
-        function showLoginForm() {
-            document.getElementById('login-form').style.right = '0';
-        }
+        <!-- Display messages if any -->
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
 
-        function closeLoginForm() {
-            document.getElementById('login-form').style.right = '-100%';
-        }
+        <button type="submit">Login</button>
+    </form>
 
-        function switchToSignUpForm() {
-            closeLoginForm();
-            showSignUpForm();
-        }
-    </script>
+    <a href="#" class="switch-link" onclick="switchToSignUpForm()">Don't have an account? Sign Up</a>
+</div>
+
+<!-- JavaScript for Form Toggles -->
+<script>
+    function showSignUpForm() {
+        document.getElementById('signup-form').style.right = '0';
+        document.getElementById('signup-form').style.transition = 'right 0.5s ease-in-out';
+    }
+
+    function closeSignUpForm() {
+        document.getElementById('signup-form').style.right = '-100%';
+        document.getElementById('signup-form').style.transition = 'right 0.5s ease-in-out';
+    }
+
+    function switchToLoginForm() {
+        closeSignUpForm();
+        showLoginForm();
+    }
+
+    function showLoginForm() {
+        document.getElementById('login-form').style.right = '0';
+        document.getElementById('login-form').style.transition = 'right 0.5s ease-in-out';
+    }
+
+    function closeLoginForm() {
+        document.getElementById('login-form').style.right = '-100%';
+        document.getElementById('login-form').style.transition = 'right 0.5s ease-in-out';
+    }
+
+    function switchToSignUpForm() {
+        closeLoginForm();
+        showSignUpForm();
+    }
+</script>
 </body>
 </html>
