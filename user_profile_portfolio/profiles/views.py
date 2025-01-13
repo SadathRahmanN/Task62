@@ -45,10 +45,13 @@ def signup_user(request):
                     user.set_password(password)
                     user.save()
 
-                    # Create a UserProfile for the new user
-                    UserProfile.objects.create(user=user)
+                    # If a user profile exists, don't create a new one, just update if necessary
+                    user_profile, created = UserProfile.objects.get_or_create(user=user)
+                    if created:
+                        messages.success(request, "User and profile created successfully!")
+                    else:
+                        messages.success(request, "User already exists with a profile.")
 
-                    messages.success(request, "User created successfully!")
                     login(request, user)  # Automatically log in after signup
                     return redirect('dashboard')
             except IntegrityError:
@@ -231,11 +234,10 @@ def upload_photo(request):
 @login_required
 def update_profile(request):
     # Ensure the user has a profile
-    if not hasattr(request.user, 'profile'):
-        UserProfile.objects.create(user=request.user)  # Create profile if it doesn't exist
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=request.user.profile)  # Assuming a ProfileForm
+        form = ProfileForm(request.POST, instance=user_profile)  # Pass the existing profile
         if form.is_valid():
             form.save()
             return JsonResponse({'success': 'Profile updated successfully'})
