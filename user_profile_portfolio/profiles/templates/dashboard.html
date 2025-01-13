@@ -242,6 +242,21 @@
         </div>
     </div>
 
+    <!-- Edit Project Modal -->
+    <div class="modal" id="editProjectModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeEditModal()">×</button>
+            <h3>Edit Project</h3>
+            <form id="editProjectForm" onsubmit="saveProjectChanges(event)">
+                {% csrf_token %}
+                <input type="text" id="editProjectName" name="name" placeholder="Project Name" required>
+                <textarea id="editProjectDescription" name="description" placeholder="Description (Optional)"></textarea>
+                <input type="url" id="editProjectImageUrl" name="image_url" placeholder="Image URL (Optional)">
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         function enableEditMode() {
             document.getElementById('usernameDisplay').innerHTML = `<input type="text" id="usernameInput" value="${document.getElementById('usernameDisplay').innerText}">`;
@@ -266,9 +281,12 @@
                   document.getElementById('usernameDisplay').innerText = data.username;
                   document.getElementById('bioDisplay').innerText = data.bio;
                   document.getElementById('skillsDisplay').innerText = data.skills;
+
                   document.querySelector('button').textContent = 'Edit Profile';
                   document.querySelector('button').setAttribute('onclick', 'enableEditMode()');
+
                   document.getElementById('profileSuccessMessage').style.display = 'block';
+                  setTimeout(() => document.getElementById('profileSuccessMessage').style.display = 'none', 3000);
               });
         }
 
@@ -278,7 +296,7 @@
             const formData = new FormData();
             formData.append('photo', file);
 
-            fetch('/update_profile/', {
+            fetch('/upload_photo/', {
                 method: 'POST',
                 body: formData,
                 headers: { 'X-CSRFToken': getCSRFToken() },
@@ -286,18 +304,61 @@
               .then(data => {
                   document.getElementById('userPhoto').src = data.profile_photo;
                   document.getElementById('profileSuccessMessage').style.display = 'block';
+                  setTimeout(() => document.getElementById('profileSuccessMessage').style.display = 'none', 3000);
               });
+        }
+
+        function uploadProject(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+
+            fetch('/projects/upload/', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': getCSRFToken() },
+            }).then(response => response.json())
+              .then(data => {
+                  document.getElementById('projectSuccessMessage').style.display = 'block';
+
+                  const projectContainer = document.getElementById('projectsContainer');
+                  const newProject = `
+                      <div class="card" id="project-${data.id}">
+                          <img src="${data.image_url || 'https://via.placeholder.com/80'}" alt="Project">
+                          <h4>${data.name}</h4>
+                          <button onclick="editProject('${data.id}')">Edit Project</button>
+                      </div>
+                  `;
+                  projectContainer.insertAdjacentHTML('beforeend', newProject);
+
+                  closeModal();
+
+                  setTimeout(() => document.getElementById('projectSuccessMessage').style.display = 'none', 3000);
+              });
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function getCSRFToken() {
+            return document.querySelector('[name=csrf-token]').content;
         }
 
         function editProject(projectId) {
             document.getElementById('editProjectModal').classList.add('active');
-            // Fetch project data and populate fields for editing
+
             fetch(`/projects/${projectId}/edit/`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('editProjectName').value = data.name;
                     document.getElementById('editProjectDescription').value = data.description;
                     document.getElementById('editProjectImageUrl').value = data.image_url;
+
                     document.getElementById('editProjectForm').onsubmit = function (e) {
                         saveProjectChanges(e, projectId);
                     };
@@ -315,7 +376,10 @@
                 headers: { 'X-CSRFToken': getCSRFToken() },
             }).then(response => response.json())
               .then(data => {
-                  alert('Project updated successfully!');
+                  const projectElement = document.getElementById(`project-${projectId}`);
+                  projectElement.querySelector('h4').innerText = data.name;
+                  projectElement.querySelector('img').src = data.image_url || 'https://via.placeholder.com/80';
+
                   closeEditModal();
               });
         }
@@ -324,23 +388,11 @@
             document.getElementById('editProjectModal').classList.remove('active');
         }
 
-        function getCSRFToken() {
-            return document.querySelector('[name=csrf-token]').content;
-        }
-
-        function closeModal() {
-            document.getElementById('uploadModal').classList.remove('active');
-        }
-
-        function showUploadModal() {
-            document.getElementById('uploadModal').classList.add('active');
-        }
-
         function previewImages() {
             const fileInput = document.getElementById('projectImages');
             const files = fileInput.files;
             const preview = document.querySelector('.upload-box');
-            preview.innerHTML = '';  // Clear the current preview
+            preview.innerHTML = '';
             for (let i = 0; i < files.length; i++) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -351,52 +403,6 @@
                 reader.readAsDataURL(files[i]);
             }
         }
-
-        function previewEditImages() {
-            const fileInput = document.getElementById('editProjectImages');
-            const files = fileInput.files;
-            const preview = document.querySelector('.upload-box');
-            preview.innerHTML = '';  // Clear the current preview
-            for (let i = 0; i < files.length; i++) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(files[i]);
-            }
-        }
-
-        // Show success message when a project is uploaded
-        function uploadProject(event) {
-            event.preventDefault();
-
-            const formData = new FormData(event.target);
-
-            fetch('/projects/upload/', {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-CSRFToken': getCSRFToken() },
-            }).then(response => response.json())
-              .then(data => {
-                  document.getElementById('projectSuccessMessage').style.display = 'block';
-
-                  // Append the new project to the dashboard
-                  const projectContainer = document.getElementById('projectsContainer');
-                  const newProject = `
-                      <div class="card" id="project-${data.id}">
-                          <img src="${data.image_url}" alt="Project">
-                          <h4>${data.name}</h4>
-                          <button onclick="editProject('${data.id}')">Edit Project</button>
-                      </div>
-                  `;
-                  projectContainer.insertAdjacentHTML('beforeend', newProject);
-
-                  // Close the upload modal
-                  closeModal();
-              });
-        }
-    </script>
+    </script>    
 </body>
 </html>
